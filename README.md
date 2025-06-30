@@ -15,8 +15,7 @@
 ## 如何開始
 直接打開 [`drink-game.html`](./drink-game.html) 即可遊玩。
 
-[線上瀏覽 GitHub 專案](https://github.com/peggy110/game9)
-
+[線上瀏覽 GitHub 專案](https://peggy110.github.io/game9/drink-game.html)
 ---
 
 Snake Game (Classic) implemented in HTML5 Canvas. Use arrow keys or WASD to play.
