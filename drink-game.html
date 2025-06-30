@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=400, initial-scale=1.0">
+    <title>貪吃蛇遊戲</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%); text-align: center; padding: 40px; }
+        #gameCanvas { background: #181c2f; display: block; margin: 0 auto; border-radius: 18px; box-shadow: 0 8px 32px rgba(74,144,226,0.18); border: 4px solid #4a90e2; }
+        h1 { color: #4a90e2; letter-spacing: 2px; margin-bottom: 10px; }
+        #score { font-size: 1.3em; margin: 20px; color: #222; font-weight: bold; }
+        #restartBtn { padding: 12px 32px; font-size: 1.1em; border-radius: 10px; border: none; background: linear-gradient(90deg, #4a90e2 60%, #7ed957 100%); color: #fff; cursor: pointer; box-shadow: 0 2px 8px #4a90e244; margin-top: 18px; }
+        #restartBtn:hover { background: linear-gradient(90deg, #357ab8 60%, #5bbd3e 100%); }
+    </style>
+</head>
+<body>
+    <h1>🐍 貪吃蛇遊戲</h1>
+    <div id="score">分數：0</div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <br>
+    <button id="restartBtn" onclick="restartGame()">重新開始</button>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const box = 20;
+        let snake, food, direction, nextDirection, score, gameInterval, isGameOver, directionLock;
+        function initGame() {
+            snake = [{x: 9, y: 9}];
+            direction = 'RIGHT';
+            nextDirection = 'RIGHT';
+            score = 0;
+            isGameOver = false;
+            directionLock = false;
+            placeFood();
+            document.getElementById('score').textContent = '分數：' + score;
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(draw, 110); // 恢復自動移動
+        }
+        function placeFood() {
+            food = {
+                x: Math.floor(Math.random() * 20),
+                y: Math.floor(Math.random() * 20)
+            };
+        }
+        function draw() {
+            // 背景
+            ctx.clearRect(0, 0, 400, 400);
+            ctx.fillStyle = ctx.createLinearGradient(0,0,400,400);
+            ctx.fillStyle.addColorStop ? ctx.fillStyle.addColorStop(0, '#232946') : null;
+            ctx.fillStyle.addColorStop ? ctx.fillStyle.addColorStop(1, '#4a90e2') : null;
+            ctx.fillRect(0, 0, 400, 400);
+            // 畫格線
+            ctx.strokeStyle = '#2e3350';
+            for(let i=0;i<=20;i++){
+                ctx.beginPath(); ctx.moveTo(i*box,0); ctx.lineTo(i*box,400); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0,i*box); ctx.lineTo(400,i*box); ctx.stroke();
+            }
+            // 畫蛇
+            for (let i = 0; i < snake.length; i++) {
+                let grad = ctx.createLinearGradient(0, snake[i].y*box, 400, snake[i].y*box+box);
+                grad.addColorStop(0, i===0 ? '#7ed957' : '#4a90e2');
+                grad.addColorStop(1, i===0 ? '#4a90e2' : '#7ed957');
+                ctx.fillStyle = grad;
+                ctx.shadowColor = i===0 ? '#7ed957' : '#4a90e2';
+                ctx.shadowBlur = i===0 ? 16 : 6;
+                ctx.fillRect(snake[i].x * box, snake[i].y * box, box-2, box-2);
+                ctx.shadowBlur = 0;
+            }
+            // 畫食物
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(food.x*box+box/2, food.y*box+box/2, box/2-3, 0, 2*Math.PI);
+            let foodGrad = ctx.createRadialGradient(food.x*box+box/2, food.y*box+box/2, 2, food.x*box+box/2, food.y*box+box/2, box/2-2);
+            foodGrad.addColorStop(0, '#fffbe6');
+            foodGrad.addColorStop(0.7, '#e26a6a');
+            foodGrad.addColorStop(1, '#b92d2d');
+            ctx.fillStyle = foodGrad;
+            ctx.shadowColor = '#e26a6a';
+            ctx.shadowBlur = 16;
+            ctx.fill();
+            ctx.restore();
+            // 移動
+            let head = {x: snake[0].x, y: snake[0].y};
+            direction = nextDirection;
+            directionLock = false;
+            if (direction === 'LEFT') head.x--;
+            if (direction === 'RIGHT') head.x++;
+            if (direction === 'UP') head.y--;
+            if (direction === 'DOWN') head.y++;
+            // 撞牆或撞自己
+            if (head.x < 0 || head.x >= 20 || head.y < 0 || head.y >= 20 || snake.some(s => s.x === head.x && s.y === head.y)) {
+                gameOver();
+                return;
+            }
+            // 吃到食物
+            if (head.x === food.x && head.y === food.y) {
+                snake.unshift(head);
+                score++;
+                document.getElementById('score').textContent = '分數：' + score;
+                placeFood();
+            } else {
+                snake.pop();
+                snake.unshift(head);
+            }
+        }
+        function gameOver() {
+            clearInterval(gameInterval);
+            isGameOver = true;
+            ctx.save();
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(0, 0, 400, 400);
+            ctx.font = 'bold 36px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.shadowColor = '#4a90e2';
+            ctx.shadowBlur = 12;
+            ctx.fillText('遊戲結束', 200, 200);
+            ctx.restore();
+        }
+        document.addEventListener('keydown', function(e) {
+            if (isGameOver || directionLock) return;
+            if ((e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') && direction !== 'RIGHT') nextDirection = 'LEFT';
+            if ((e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') && direction !== 'DOWN') nextDirection = 'UP';
+            if ((e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') && direction !== 'LEFT') nextDirection = 'RIGHT';
+            if ((e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') && direction !== 'UP') nextDirection = 'DOWN';
+            directionLock = true;
+        });
+        function restartGame() {
+            initGame();
+        }
+        window.onload = initGame;
+    </script>
+</body>
+</html>
