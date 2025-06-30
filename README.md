@@ -13,7 +13,9 @@
 - 支援電腦瀏覽器即玩。
 
 ## 如何開始
-直接打開 `drink-game.html` 即可遊玩。
+直接打開 [`drink-game.html`](./drink-game.html) 即可遊玩。
+
+[線上瀏覽 GitHub 專案](https://github.com/peggy110/game9)
 
 ---
 
